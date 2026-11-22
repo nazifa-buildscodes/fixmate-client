@@ -11,6 +11,10 @@ import {
   ShieldCheck,
   AlertCircle,
   CheckCircle2,
+  Phone,
+  Mail,
+  MessageSquare,
+  Send,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
@@ -34,6 +38,14 @@ export default function ServiceDetailsPage() {
   const [preferredDate, setPreferredDate] = useState('');
   const [problemDescription, setProblemDescription] = useState('');
 
+  // Technician Direct Message Modal State
+  const [msgModalOpen, setMsgModalOpen] = useState(false);
+  const [msgSenderName, setMsgSenderName] = useState('');
+  const [msgSenderEmail, setMsgSenderEmail] = useState('');
+  const [msgSenderPhone, setMsgSenderPhone] = useState('');
+  const [msgText, setMsgText] = useState('');
+  const [sendingMsg, setSendingMsg] = useState(false);
+
   const todayStr = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -42,6 +54,14 @@ export default function ServiceDetailsPage() {
       .catch(() => setNotFoundErr(true))
       .finally(() => setLoading(false));
   }, [id]);
+
+  useEffect(() => {
+    if (session?.user) {
+      setMsgSenderName((prev) => prev || session.user.name || '');
+      setMsgSenderEmail((prev) => prev || session.user.email || '');
+      setMsgSenderPhone((prev) => prev || session.user.phone || '');
+    }
+  }, [session]);
 
   if (loading) {
     return (
@@ -68,6 +88,22 @@ export default function ServiceDetailsPage() {
   const { service, technician, reviews = [], avgRating } = data;
   const user = session?.user;
   const role = user?.role;
+
+  const techName = technician?.name || service.technicianName || 'Technician';
+  const techArea = technician?.area || service.serviceArea || '';
+  const techPhone =
+    technician?.phone ||
+    technician?.phoneNumber ||
+    technician?.mobile ||
+    technician?.contact ||
+    service?.technicianPhone ||
+    service?.phone ||
+    '';
+  const techEmail =
+    technician?.email ||
+    service?.technicianEmail ||
+    service?.providerEmail ||
+    '';
 
   const handleRequestClick = () => {
     if (!user) {
@@ -105,6 +141,40 @@ export default function ServiceDetailsPage() {
       toast.error(err.message);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSendTechMessage = async (e) => {
+    e.preventDefault();
+    if (!msgSenderName.trim() || !msgSenderEmail.trim() || msgText.trim().length < 5) {
+      toast.error('Please enter your name, email, and message.');
+      return;
+    }
+
+    setSendingMsg(true);
+    try {
+      await apiFetch('/api/messages', {
+        method: 'POST',
+        body: {
+          senderName: msgSenderName.trim(),
+          senderEmail: msgSenderEmail.trim(),
+          senderPhone: msgSenderPhone.trim(),
+          senderRole: user?.role || 'guest',
+          recipientRole: 'technician',
+          recipientEmail: techEmail,
+          serviceId: service._id,
+          serviceTitle: service.title,
+          topic: 'Service Inquiry',
+          message: msgText.trim(),
+        },
+      });
+      toast.success(`Message sent to ${techName}!`);
+      setMsgText('');
+      setMsgModalOpen(false);
+    } catch (err) {
+      toast.error(err.message || 'Failed to send message');
+    } finally {
+      setSendingMsg(false);
     }
   };
 
@@ -247,21 +317,59 @@ export default function ServiceDetailsPage() {
                 src={
                   technician?.image ||
                   `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                    service.technicianName
+                    techName
                   )}&background=1382f6&color=fff`
                 }
-                alt={service.technicianName}
-                className="h-12 w-12 rounded-full object-cover"
+                alt={techName}
+                className="h-12 w-12 shrink-0 rounded-full object-cover"
               />
               <div>
-                <p className="font-bold text-slate-900 dark:text-white">
-                  {technician?.name || service.technicianName}
-                </p>
-                <p className="text-xs text-slate-500">
-                  {technician?.area || service.serviceArea}
-                </p>
+                <p className="font-bold text-slate-900 dark:text-white">{techName}</p>
+                {techArea && (
+                  <p className="inline-flex items-center gap-1 text-xs text-slate-500">
+                    <MapPin className="h-3.5 w-3.5 text-brand-600" />
+                    {techArea}
+                  </p>
+                )}
               </div>
             </div>
+
+            {/* Direct Urgent Contact Links & Message Trigger */}
+            <div className="mt-4 space-y-2 border-t border-slate-100 pt-4 text-xs dark:border-slate-800">
+              {techPhone ? (
+                <a
+                  href={`tel:${techPhone}`}
+                  className="flex items-center gap-2 rounded-xl bg-emerald-50 px-3 py-2 font-semibold text-emerald-700 transition hover:bg-emerald-100 dark:bg-emerald-950/50 dark:text-emerald-300"
+                >
+                  <Phone className="h-3.5 w-3.5 shrink-0" />
+                  <span>Call: {techPhone}</span>
+                </a>
+              ) : (
+                <p className="text-slate-400">Phone number not added by technician yet</p>
+              )}
+
+              {techEmail && (
+                <a
+                  href={`mailto:${techEmail}`}
+                  className="flex items-center gap-2 rounded-xl bg-brand-50 px-3 py-2 font-semibold text-brand-700 transition hover:bg-brand-100 dark:bg-brand-950/50 dark:text-brand-300"
+                >
+                  <Mail className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Email: {techEmail}</span>
+                </a>
+              )}
+
+              {techEmail && user?.email?.toLowerCase() !== techEmail.toLowerCase() && (
+                <button
+                  type="button"
+                  onClick={() => setMsgModalOpen(true)}
+                  className="btn-secondary mt-1 flex w-full items-center justify-center gap-1.5 py-2 text-xs"
+                >
+                  <MessageSquare className="h-3.5 w-3.5 text-brand-600" />
+                  Message Technician
+                </button>
+              )}
+            </div>
+
             {technician?.bio && (
               <p className="mt-3 text-xs leading-relaxed text-slate-600 dark:text-slate-400">
                 {technician.bio}
@@ -369,6 +477,78 @@ export default function ServiceDetailsPage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Direct Message to Technician Modal */}
+      {msgModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+          <form onSubmit={handleSendTechMessage} className="card-surface w-full max-w-md space-y-4 p-6">
+            <div>
+              <h3 className="text-lg font-extrabold">Message {techName}</h3>
+              <p className="text-xs text-slate-500">Regarding: {service.title}</p>
+            </div>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-semibold">Your Name *</label>
+                <input
+                  type="text"
+                  required
+                  value={msgSenderName}
+                  onChange={(e) => setMsgSenderName(e.target.value)}
+                  className="input-field"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold">Your Phone</label>
+                <input
+                  type="tel"
+                  value={msgSenderPhone}
+                  onChange={(e) => setMsgSenderPhone(e.target.value)}
+                  placeholder="01XXXXXXXXX"
+                  className="input-field"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold">Your Email *</label>
+              <input
+                type="email"
+                required
+                value={msgSenderEmail}
+                onChange={(e) => setMsgSenderEmail(e.target.value)}
+                className="input-field"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold">Message *</label>
+              <textarea
+                rows={3}
+                required
+                value={msgText}
+                onChange={(e) => setMsgText(e.target.value)}
+                placeholder="Ask about availability, parts, or repair details..."
+                className="input-field"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setMsgModalOpen(false)}
+                className="btn-secondary"
+              >
+                Cancel
+              </button>
+              <button type="submit" disabled={sendingMsg} className="btn-primary text-xs">
+                <Send className="h-3.5 w-3.5" />
+                {sendingMsg ? 'Sending...' : 'Send Message'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </div>

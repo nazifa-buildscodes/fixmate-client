@@ -28,7 +28,8 @@ export default function CustomerOverviewPage() {
     { label: 'Total Requests', value: stats.totalRequests, icon: ClipboardList, color: 'text-brand-600 bg-brand-50' },
     { label: 'Active Jobs', value: stats.activeJobs, icon: Wrench, color: 'text-amber-600 bg-amber-50' },
     { label: 'Completed Jobs', value: stats.completedJobs, icon: CheckCircle2, color: 'text-emerald-600 bg-emerald-50' },
-{ label: 'Total Spent', value: `৳${stats.totalSpent}`, icon: Banknote, color: 'text-indigo-600 bg-indigo-50' },  ];
+    { label: 'Total Spent', value: `৳${stats.totalSpent}`, icon: Banknote, color: 'text-indigo-600 bg-indigo-50' },
+  ];
 
   return (
     <div className="space-y-6">

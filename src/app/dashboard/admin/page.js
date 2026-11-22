@@ -28,7 +28,7 @@ export default function AdminOverviewPage() {
     { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-brand-600 bg-brand-50' },
     { label: 'Total Technicians', value: stats.totalTechnicians, icon: Wrench, color: 'text-indigo-600 bg-indigo-50' },
     { label: 'Pending Services', value: stats.pendingServices, icon: Clock, color: 'text-amber-600 bg-amber-50' },
-    { label: 'Total Revenue', value: `${stats.totalRevenue}`, icon: Banknote, color: 'text-emerald-600 bg-emerald-50' },
+    { label: 'Total Revenue', value: `৳${stats.totalRevenue}`, icon: Banknote, color: 'text-emerald-600 bg-emerald-50' },
   ];
 
   return (

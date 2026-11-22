@@ -1,12 +1,66 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Wrench, Mail, Phone, MapPin } from 'lucide-react';
+import { Wrench, Mail, Phone, MapPin, MessageSquarePlus, X, Send } from 'lucide-react';
+import { toast } from 'sonner';
 import { CATEGORIES } from '@/lib/constants';
+import { apiFetch } from '@/lib/api';
+import { useSession } from '@/lib/auth-client';
 
 export default function Footer() {
+  const { data: session } = useSession();
+  const [contactOpen, setContactOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
+  const [message, setMessage] = useState('');
+  const [sending, setSending] = useState(false);
+
+  useEffect(() => {
+    if (session?.user) {
+      setName((prev) => prev || session.user.name || '');
+      setEmail((prev) => prev || session.user.email || '');
+      setPhone((prev) => prev || session.user.phone || '');
+    }
+  }, [session]);
+
+  const handleQuickContact = async (e) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim() || message.trim().length < 10) {
+      toast.error('Please fill all fields (message at least 10 characters).');
+      return;
+    }
+
+    setSending(true);
+    try {
+      const res = await apiFetch('/api/messages', {
+        method: 'POST',
+        body: {
+          senderName: name.trim(),
+          senderEmail: email.trim(),
+          senderPhone: phone.trim(),
+          senderRole: session?.user?.role || 'guest',
+          recipientRole: 'admin',
+          topic: 'Quick Footer Inquiry',
+          message: message.trim(),
+        },
+      });
+      const refCode = res?.id ? String(res.id).slice(-6).toUpperCase() : 'SENT';
+      toast.success(`Message sent to Admin! Reference: ${refCode}`);
+      setPhone('');
+      setMessage('');
+      setContactOpen(false);
+    } catch (err) {
+      toast.error(err.message || 'Failed to send message');
+    } finally {
+      setSending(false);
+    }
+  };
+
   return (
     <footer className="border-t border-slate-200 bg-slate-900 text-slate-300 dark:border-slate-800 dark:bg-slate-950">
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4 lg:px-8">
-        {/* Brand */}
         <div>
           <Link href="/" className="flex items-center gap-2.5">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-600 text-white">
@@ -20,7 +74,6 @@ export default function Footer() {
             Trusted smart device &amp; home appliance repairs by verified technicians.
             Track every step and pay only after the job is done.
           </p>
-          {/* Social links including the new X logo */}
           <div className="mt-5 flex items-center gap-3">
             <a
               href="https://x.com"
@@ -54,7 +107,6 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Quick Links */}
         <div>
           <h4 className="text-sm font-bold uppercase tracking-wider text-white">
             Quick Links
@@ -72,7 +124,7 @@ export default function Footer() {
             </li>
             <li>
               <Link href="/about" className="hover:text-brand-400">
-                How It Works
+                How It Works &amp; Contact
               </Link>
             </li>
             <li>
@@ -83,7 +135,6 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Popular Categories */}
         <div>
           <h4 className="text-sm font-bold uppercase tracking-wider text-white">
             Popular Categories
@@ -102,31 +153,135 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Contact Info */}
         <div>
           <h4 className="text-sm font-bold uppercase tracking-wider text-white">
             Contact Us
           </h4>
           <ul className="mt-4 space-y-3 text-sm text-slate-400">
-            <li className="flex items-center gap-2.5">
-              <Mail className="h-4 w-4 text-brand-400" />
-              support@fixmate.com
+            <li>
+              <a
+                href="mailto:support@fixmate.com"
+                className="flex items-center gap-2.5 transition hover:text-brand-400"
+              >
+                <Mail className="h-4 w-4 shrink-0 text-brand-400" />
+                support@fixmate.com
+              </a>
             </li>
-            <li className="flex items-center gap-2.5">
-              <Phone className="h-4 w-4 text-brand-400" />
-              +880 1700-000000
+            <li>
+              <a
+                href="tel:+8801700000000"
+                className="flex items-center gap-2.5 transition hover:text-brand-400"
+              >
+                <Phone className="h-4 w-4 shrink-0 text-brand-400" />
+                +880 1700-000000
+              </a>
             </li>
             <li className="flex items-start gap-2.5">
-              <MapPin className="mt-0.5 h-4 w-4 text-brand-400" />
-              House 12, Road 7, Dhanmondi, Dhaka 1209
+              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-brand-400" />
+              <span>House 12, Road 7, Dhanmondi, Dhaka 1209</span>
             </li>
           </ul>
+
+          <button
+            type="button"
+            onClick={() => setContactOpen(true)}
+            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-brand-600 px-3.5 py-2 text-xs font-semibold text-white transition hover:bg-brand-700"
+          >
+            <MessageSquarePlus className="h-3.5 w-3.5" /> Quick Message
+          </button>
         </div>
       </div>
 
       <div className="border-t border-slate-800 py-5 text-center text-xs text-slate-500">
         © {new Date().getFullYear()} FixMate. All rights reserved. Built for reliable device &amp; appliance care.
       </div>
+
+      {contactOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 p-4">
+          <form
+            onSubmit={handleQuickContact}
+            className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-100 shadow-xl"
+          >
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+              <div>
+                <h3 className="text-base font-extrabold text-white">Send a Quick Message</h3>
+                <p className="text-xs text-slate-400">Sent to Admin with your contact details</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setContactOpen(false)}
+                className="rounded-lg p-1 text-slate-400 hover:bg-slate-800 hover:text-white"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-300">Your Name</label>
+              <input
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Enter your name"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white outline-none focus:border-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-300">Email Address</label>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white outline-none focus:border-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-300">Phone Number</label>
+              <input
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="01XXXXXXXXX"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white outline-none focus:border-brand-500"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1 block text-xs font-semibold text-slate-300">Message</label>
+              <textarea
+                rows={3}
+                required
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                placeholder="How can we help you?"
+                className="w-full rounded-xl border border-slate-700 bg-slate-800 px-3.5 py-2 text-sm text-white outline-none focus:border-brand-500"
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-1">
+              <button
+                type="button"
+                onClick={() => setContactOpen(false)}
+                className="rounded-xl border border-slate-700 px-4 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={sending}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-semibold text-white hover:bg-brand-700 disabled:opacity-60"
+              >
+                <Send className="h-3.5 w-3.5" /> {sending ? 'Sending...' : 'Send Message'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </footer>
   );
 }

@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { CreditCard, Star, XCircle } from 'lucide-react';
+import { CreditCard, FileText, Star, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { apiFetch } from '@/lib/api';
 import StatusBadge from '@/components/StatusBadge';
 import JobTimeline from '@/components/JobTimeline';
 import ConfirmModal from '@/components/ConfirmModal';
+import InvoiceModal from '@/components/InvoiceModal';
 
 export default function CustomerBookingsPage() {
   const [bookings, setBookings] = useState([]);
@@ -19,6 +20,7 @@ export default function CustomerBookingsPage() {
   const [reviewModal, setReviewModal] = useState(null);
   const [rating, setRating] = useState(5);
   const [reviewText, setReviewText] = useState('');
+  const [invoiceData, setInvoiceData] = useState(null);
 
   const loadBookings = () => {
     setLoading(true);
@@ -81,13 +83,26 @@ export default function CustomerBookingsPage() {
     }
   };
 
+  const openBookingInvoice = (b) => {
+    setInvoiceData({
+      roleLabel: 'Customer Payment Invoice',
+      docId: b._id,
+      serviceTitle: b.serviceTitle,
+      technicianName: b.technicianName,
+      dateLabel: 'Service Date',
+      dateValue: new Date(b.preferredDate).toLocaleDateString(),
+      statusText: b.paymentStatus || 'paid',
+      amount: b.finalAmount || b.basePrice,
+    });
+  };
+
   if (loading) return <div className="p-6 text-sm">Loading bookings...</div>;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-extrabold">My Repair Bookings</h1>
-        <Link href="/services" className="btn-primary text-xs">
+        <Link href="/services" className="btn-primary w-fit text-xs">
           Book New Repair
         </Link>
       </div>
@@ -100,52 +115,58 @@ export default function CustomerBookingsPage() {
           </Link>
         </div>
       ) : (
-        <div className="card-surface overflow-x-auto">
-          <table className="w-full text-left text-sm">
+        <div className="card-surface w-full overflow-x-auto">
+          <table className="w-full min-w-[780px] text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
               <tr>
-                <th className="p-4">Service</th>
-                <th className="p-4">Technician</th>
-                <th className="p-4">Date</th>
-                <th className="p-4">Amount</th>
-                <th className="p-4">Status &amp; Timeline</th>
-                <th className="p-4">Payment</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-3.5 sm:p-4">Service</th>
+                <th className="whitespace-nowrap p-3.5 sm:p-4">Technician</th>
+                <th className="whitespace-nowrap p-3.5 sm:p-4">Date</th>
+                <th className="whitespace-nowrap p-3.5 sm:p-4">Amount</th>
+                <th className="whitespace-nowrap p-3.5 sm:p-4">Status &amp; Timeline</th>
+                <th className="whitespace-nowrap p-3.5 sm:p-4">Payment</th>
+                <th className="whitespace-nowrap p-3.5 text-right sm:p-4">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {bookings.map((b) => (
-                <tr key={b._id}>
-                  <td className="p-4">
+                <tr key={b._id} className="align-middle">
+                  <td className="p-3.5 pr-4 sm:p-4">
                     <div className="flex items-center gap-3">
                       <img
                         src={b.serviceImage}
                         alt={b.serviceTitle}
-                        className="h-11 w-14 rounded-lg object-cover"
+                        className="h-11 w-14 shrink-0 rounded-lg object-cover"
                       />
-                      <span className="font-semibold">{b.serviceTitle}</span>
+                      <span className="line-clamp-2 min-w-[160px] font-semibold">
+                        {b.serviceTitle}
+                      </span>
                     </div>
                   </td>
-                  <td className="p-4 text-slate-600 dark:text-slate-300">{b.technicianName}</td>
-                  <td className="p-4 text-xs text-slate-500">
+                  <td className="whitespace-nowrap p-3.5 text-slate-600 dark:text-slate-300 sm:p-4">
+                    {b.technicianName}
+                  </td>
+                  <td className="whitespace-nowrap p-3.5 text-xs text-slate-500 sm:p-4">
                     {new Date(b.preferredDate).toLocaleDateString()}
                   </td>
-                  <td className="p-4 font-bold">৳{b.finalAmount || b.basePrice}</td>
-                  <td className="p-4">
+                  <td className="whitespace-nowrap p-3.5 font-bold sm:p-4">
+                    ৳{b.finalAmount || b.basePrice}
+                  </td>
+                  <td className="p-3.5 sm:p-4">
                     <div className="space-y-1.5">
                       <StatusBadge status={b.status} />
                       <JobTimeline status={b.status} paymentStatus={b.paymentStatus} />
                     </div>
                   </td>
-                  <td className="p-4">
+                  <td className="whitespace-nowrap p-3.5 sm:p-4">
                     <StatusBadge status={b.paymentStatus} />
                   </td>
-                  <td className="p-4 text-right">
-                    <div className="flex justify-end gap-2">
+                  <td className="p-3.5 text-right sm:p-4">
+                    <div className="flex flex-wrap justify-end gap-2">
                       {b.status === 'requested' && (
                         <button
                           onClick={() => setCancelId(b._id)}
-                          className="inline-flex items-center gap-1 rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+                          className="inline-flex items-center gap-1 whitespace-nowrap rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-100"
                         >
                           <XCircle className="h-3.5 w-3.5" /> Cancel
                         </button>
@@ -154,16 +175,26 @@ export default function CustomerBookingsPage() {
                         <button
                           disabled={payingId === b._id}
                           onClick={() => handlePayNow(b._id)}
-                          className="btn-primary px-3 py-1.5 text-xs"
+                          className="btn-primary whitespace-nowrap px-3 py-1.5 text-xs"
                         >
                           <CreditCard className="h-3.5 w-3.5" />
                           {payingId === b._id ? 'Redirecting...' : 'Pay Now'}
                         </button>
                       )}
+                      {b.paymentStatus === 'paid' && (
+                        <button
+                          type="button"
+                          onClick={() => openBookingInvoice(b)}
+                          className="btn-secondary inline-flex items-center gap-1 whitespace-nowrap px-3 py-1.5 text-xs"
+                        >
+                          <FileText className="h-3.5 w-3.5" /> Invoice
+                        </button>
+                      )}
                       {b.paymentStatus === 'paid' && !b.rating && (
                         <button
+                          type="button"
                           onClick={() => setReviewModal(b)}
-                          className="btn-secondary px-3 py-1.5 text-xs"
+                          className="btn-secondary inline-flex items-center gap-1 whitespace-nowrap px-3 py-1.5 text-xs"
                         >
                           <Star className="h-3.5 w-3.5 text-amber-500" /> Review
                         </button>
@@ -232,6 +263,8 @@ export default function CustomerBookingsPage() {
           </form>
         </div>
       )}
+
+      <InvoiceModal invoice={invoiceData} onClose={() => setInvoiceData(null)} />
     </div>
   );
 }

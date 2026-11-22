@@ -17,31 +17,63 @@ import {
   LogOut,
   Menu,
   X,
+  MessageSquare,
+  Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useSession, signOut } from '@/lib/auth-client';
-import { clearCachedToken } from '@/lib/api';
+import { apiFetch, clearCachedToken } from '@/lib/api';
 import { getDashboardPath } from '@/lib/constants';
 import ThemeToggle from '@/components/ThemeToggle';
 
 const MENUS = {
   customer: [
     { label: 'Overview', href: '/dashboard/customer', icon: LayoutDashboard },
+    {
+      label: 'Messages',
+      href: '/dashboard/customer/messages',
+      icon: MessageSquare,
+      badgeKey: 'unreadMessages',
+    },
     { label: 'My Bookings', href: '/dashboard/customer/bookings', icon: ClipboardList },
     { label: 'Payment History', href: '/dashboard/customer/payments', icon: CreditCard },
     { label: 'Update Profile', href: '/dashboard/profile', icon: User },
   ],
   technician: [
     { label: 'Overview', href: '/dashboard/technician', icon: LayoutDashboard },
+    { label: 'Reviews', href: '/dashboard/technician/reviews', icon: Star },
+    {
+      label: 'Messages',
+      href: '/dashboard/technician/messages',
+      icon: MessageSquare,
+      badgeKey: 'unreadMessages',
+    },
     { label: 'Add a Service', href: '/dashboard/technician/add-service', icon: PlusCircle },
     { label: 'My Services', href: '/dashboard/technician/my-services', icon: Briefcase },
-    { label: 'Manage Requests', href: '/dashboard/technician/requests', icon: ClipboardList },
+    {
+      label: 'Manage Requests',
+      href: '/dashboard/technician/requests',
+      icon: ClipboardList,
+      badgeKey: 'newBookings',
+    },
     { label: 'Update Profile', href: '/dashboard/profile', icon: User },
   ],
   admin: [
     { label: 'Overview', href: '/dashboard/admin', icon: LayoutDashboard },
+    { label: 'Reviews', href: '/dashboard/admin/reviews', icon: Star },
+    {
+      label: 'Messages',
+      href: '/dashboard/admin/messages',
+      icon: MessageSquare,
+      badgeKey: 'unreadMessages',
+    },
     { label: 'Manage Users', href: '/dashboard/admin/users', icon: Users },
-    { label: 'Service Approval', href: '/dashboard/admin/services', icon: ShieldCheck },
+    {
+      label: 'Service Approval',
+      href: '/dashboard/admin/services',
+      icon: ShieldCheck,
+      badgeKey: 'pendingServices',
+    },
     { label: 'All Bookings', href: '/dashboard/admin/bookings', icon: ClipboardList },
     { label: 'Transactions', href: '/dashboard/admin/transactions', icon: CreditCard },
     { label: 'Update Profile', href: '/dashboard/profile', icon: User },
@@ -53,9 +85,14 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
   const { data: session, isPending } = useSession();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [badges, setBadges] = useState({
+    newBookings: 0,
+    pendingServices: 0,
+    unreadMessages: 0,
+  });
 
   const user = session?.user;
-  const role = user?.role || 'customer';
+  const role = (user?.role || 'customer').toLowerCase();
 
   useEffect(() => {
     if (isPending) return;
@@ -64,7 +101,6 @@ export default function DashboardLayout({ children }) {
       return;
     }
 
-    // Role route protection
     if (pathname.startsWith('/dashboard/admin') && role !== 'admin') {
       toast.error('Forbidden: Admin access only');
       router.replace(getDashboardPath(role));
@@ -76,6 +112,66 @@ export default function DashboardLayout({ children }) {
       router.replace(getDashboardPath(role));
     }
   }, [user, role, isPending, pathname, router]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadBadges = async () => {
+      try {
+        const myEmail = (user.email || '').toLowerCase();
+        const msgRes = await apiFetch('/api/messages/my', { authRequired: true }).catch(() => ({
+          messages: [],
+        }));
+        const msgList = msgRes?.messages || [];
+
+        let msgCount = 0;
+        if (role === 'admin') {
+          msgCount = msgList.filter(
+            (m) => m.recipientRole === 'admin' && !(m.reply || '').trim()
+          ).length;
+        } else if (role === 'technician') {
+          msgCount = msgList.filter(
+            (m) =>
+              m.recipientRole === 'technician' &&
+              (m.recipientEmail || '').toLowerCase() === myEmail &&
+              !(m.reply || '').trim()
+          ).length;
+        } else {
+          msgCount = msgList.filter((m) => Boolean((m.reply || '').trim())).length;
+        }
+
+        if (role === 'technician') {
+          const res = await apiFetch('/api/bookings/technician', { authRequired: true });
+          const list = res.bookings || res || [];
+          const count = Array.isArray(list)
+            ? list.filter((b) => (b.status || '').toLowerCase() === 'requested').length
+            : 0;
+          setBadges({
+            newBookings: count,
+            pendingServices: 0,
+            unreadMessages: msgCount,
+          });
+        } else if (role === 'admin') {
+          const stats = await apiFetch('/api/dashboard/admin-stats', { authRequired: true });
+          setBadges({
+            newBookings: 0,
+            pendingServices: Number(stats?.pendingServices || 0),
+            unreadMessages: msgCount,
+          });
+        } else {
+          setBadges({
+            newBookings: 0,
+            pendingServices: 0,
+            unreadMessages: msgCount,
+          });
+        }
+      } catch {
+        // silent fail
+      }
+    };
+
+    loadBadges();
+  }, [user, role, pathname]);
 
   if (isPending || !user) {
     return (
@@ -96,7 +192,6 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -104,7 +199,6 @@ export default function DashboardLayout({ children }) {
         />
       )}
 
-      {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-40 flex w-64 flex-col border-r border-slate-200 bg-white transition-transform dark:border-slate-800 dark:bg-slate-900 lg:static lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
@@ -131,19 +225,35 @@ export default function DashboardLayout({ children }) {
           {menuItems.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href;
+            const badgeCount = item.badgeKey ? badges[item.badgeKey] : 0;
+
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
                   active
                     ? 'bg-brand-600 text-white shadow-sm'
                     : 'text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800'
                 }`}
               >
-                <Icon className="h-4 w-4" />
-                {item.label}
+                <span className="flex items-center gap-3">
+                  <Icon className="h-4 w-4 shrink-0" />
+                  <span>{item.label}</span>
+                </span>
+
+                {badgeCount > 0 && (
+                  <span
+                    className={`inline-flex min-w-[20px] items-center justify-center rounded-full px-1.5 py-0.5 text-[11px] font-extrabold ${
+                      active
+                        ? 'bg-white text-blue-600'
+                        : 'bg-blue-600 text-white'
+                    }`}
+                  >
+                    {badgeCount}
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -165,7 +275,6 @@ export default function DashboardLayout({ children }) {
         </div>
       </aside>
 
-      {/* Main Content */}
       <div className="flex flex-1 flex-col min-w-0">
         <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-4 backdrop-blur dark:border-slate-800 dark:bg-slate-900/90 sm:px-6">
           <button
