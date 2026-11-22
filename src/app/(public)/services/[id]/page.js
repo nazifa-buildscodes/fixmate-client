@@ -56,11 +56,32 @@ export default function ServiceDetailsPage() {
   }, [id]);
 
   useEffect(() => {
-    if (session?.user) {
-      setMsgSenderName((prev) => prev || session.user.name || '');
-      setMsgSenderEmail((prev) => prev || session.user.email || '');
-      setMsgSenderPhone((prev) => prev || session.user.phone || '');
-    }
+    if (!session?.user) return;
+
+    const u = session.user;
+    const sessionPhone = u.phone || u.phoneNumber || u.mobile || '';
+
+    setMsgSenderName((prev) => prev || u.name || '');
+    setMsgSenderEmail((prev) => prev || u.email || '');
+    setMsgSenderPhone((prev) => prev || sessionPhone);
+    setPhone((prev) => prev || sessionPhone);
+
+    apiFetch('/api/users/me', { authRequired: true })
+      .then((res) => {
+        const profile = res?.user || res || {};
+        const savedPhone =
+          profile.phone || profile.phoneNumber || profile.mobile || sessionPhone || '';
+        const savedArea = profile.area || profile.address || '';
+
+        if (savedPhone) {
+          setPhone((prev) => prev || savedPhone);
+          setMsgSenderPhone((prev) => prev || savedPhone);
+        }
+        if (savedArea) {
+          setAddress((prev) => prev || savedArea);
+        }
+      })
+      .catch(() => {});
   }, [session]);
 
   if (loading) {
