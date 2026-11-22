@@ -29,6 +29,7 @@ export default function Navbar() {
     await signOut();
     clearCachedToken();
     setDropdownOpen(false);
+    setMobileOpen(false);
     toast.success('Signed out successfully');
     router.push('/');
     router.refresh();
@@ -149,78 +150,166 @@ export default function Navbar() {
         <div className="flex items-center gap-2 md:hidden">
           <ThemeToggle />
           <button
-            onClick={() => setMobileOpen((v) => !v)}
-            className="rounded-xl border border-slate-200 p-2 text-slate-700 dark:border-slate-700 dark:text-slate-200"
+            type="button"
+            aria-label="Open menu"
+            onClick={() => setMobileOpen(true)}
+            className="rounded-xl border border-slate-200 p-2 text-slate-700 transition hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
           >
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            <Menu className="h-5 w-5" />
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      {mobileOpen && (
-        <div className="border-t border-slate-200 bg-white px-4 py-4 dark:border-slate-800 dark:bg-slate-950 md:hidden">
-          <div className="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
+      {/* Right Slide-Over Mobile Drawer */}
+      <div
+        className={`fixed inset-0 z-50 md:hidden transition-opacity duration-300 ${
+          mobileOpen ? 'pointer-events-auto opacity-100' : 'pointer-events-none opacity-0'
+        }`}
+      >
+        {/* Backdrop */}
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs"
+        />
+
+        {/* Drawer Panel */}
+        <aside
+          className={`fixed right-0 top-0 flex h-full w-80 max-w-[85vw] flex-col justify-between border-l border-slate-200 bg-white p-5 shadow-2xl transition-transform duration-300 ease-out dark:border-slate-800 dark:bg-slate-950 ${
+            mobileOpen ? 'translate-x-0' : 'translate-x-full'
+          }`}
+        >
+          <div className="space-y-5 overflow-y-auto">
+            {/* Drawer Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4 dark:border-slate-800">
               <Link
-                key={link.href}
-                href={link.href}
+                href="/"
                 onClick={() => setMobileOpen(false)}
-                className={`rounded-lg px-3 py-2.5 text-sm font-semibold ${
-                  pathname === link.href
-                    ? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400'
-                    : 'text-slate-700 dark:text-slate-200'
-                }`}
+                className="flex items-center gap-2"
               >
-                {link.label}
+                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-brand-600 text-white">
+                  <Wrench className="h-4 w-4" />
+                </div>
+                <span className="text-lg font-extrabold text-slate-900 dark:text-white">
+                  Fix<span className="text-brand-600">Mate</span>
+                </span>
               </Link>
-            ))}
-          </div>
-          <div className="mt-4 border-t border-slate-100 pt-4 dark:border-slate-800">
-            {user ? (
-              <div className="space-y-2">
-                <Link
-                  href={getDashboardPath(user.role)}
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-primary w-full"
-                >
-                  Dashboard ({user.role})
-                </Link>
-                <Link
-                  href="/dashboard/profile"
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-secondary w-full"
-                >
-                  Update Profile
-                </Link>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full rounded-xl bg-rose-50 py-2.5 text-sm font-semibold text-rose-600 dark:bg-rose-950/40"
-                >
-                  Sign Out
-                </button>
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 gap-2">
-                <Link
-                  href="/sign-in"
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-secondary"
-                >
-                  Sign In
-                </Link>
-                <Link
-                  href="/sign-up"
-                  onClick={() => setMobileOpen(false)}
-                  className="btn-primary"
-                >
-                  Sign Up
-                </Link>
+              <button
+                type="button"
+                aria-label="Close menu"
+                onClick={() => setMobileOpen(false)}
+                className="rounded-xl border border-slate-200 p-2 text-slate-600 transition hover:bg-slate-100 dark:border-slate-800 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* User Info (if signed in) */}
+            {user && (
+              <div className="flex items-center gap-3 rounded-2xl border border-slate-200/80 bg-slate-50 p-3 dark:border-slate-800 dark:bg-slate-900/80">
+                <img
+                  src={
+                    user.image ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      user.name || 'U'
+                    )}&background=1382f6&color=fff`
+                  }
+                  alt={user.name}
+                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                />
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-bold text-slate-900 dark:text-white">
+                    {user.name}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">{user.email}</p>
+                  <span className="mt-1 inline-block rounded-full bg-brand-100 px-2 py-0.5 text-[10px] font-bold uppercase text-brand-700 dark:bg-brand-950 dark:text-brand-300">
+                    {user.role || 'customer'}
+                  </span>
+                </div>
               </div>
             )}
+
+            {/* Navigation Links */}
+            <nav className="flex flex-col gap-1">
+              {NAV_LINKS.map((link) => {
+                const active = pathname === link.href;
+                return (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    onClick={() => setMobileOpen(false)}
+                    className={`rounded-xl px-3.5 py-2.5 text-sm font-semibold transition ${
+                      active
+                        ? 'bg-brand-50 text-brand-700 dark:bg-brand-950 dark:text-brand-400'
+                        : 'text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-900'
+                    }`}
+                  >
+                    {link.label}
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Account Actions */}
+            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              {user ? (
+                <div className="space-y-2">
+                  <Link
+                    href={getDashboardPath(user.role)}
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-primary flex w-full items-center justify-center gap-2"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    Dashboard ({user.role || 'customer'})
+                  </Link>
+                  <Link
+                    href="/dashboard/profile"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-secondary flex w-full items-center justify-center gap-2"
+                  >
+                    <User className="h-4 w-4" />
+                    Update Profile
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-2">
+                  <Link
+                    href="/sign-in"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-secondary"
+                  >
+                    Sign In
+                  </Link>
+                  <Link
+                    href="/sign-up"
+                    onClick={() => setMobileOpen(false)}
+                    className="btn-primary"
+                  >
+                    Sign Up
+                  </Link>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
-      )}
+
+          {/* Drawer Footer */}
+          {user ? (
+            <div className="border-t border-slate-100 pt-4 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={handleSignOut}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-rose-50 py-2.5 text-sm font-semibold text-rose-600 transition hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-950/70"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <p className="border-t border-slate-100 pt-3 text-center text-[11px] text-slate-400 dark:border-slate-800">
+              FixMate · Reliable Device Care
+            </p>
+          )}
+        </aside>
+      </div>
     </header>
   );
 }
