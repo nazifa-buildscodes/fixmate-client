@@ -130,7 +130,7 @@ export default function CustomerBookingsPage() {
                   <td className="p-4 text-xs text-slate-500">
                     {new Date(b.preferredDate).toLocaleDateString()}
                   </td>
-                  <td className="p-4 font-bold">${b.finalAmount || b.basePrice}</td>
+                  <td className="p-4 font-bold">৳{b.finalAmount || b.basePrice}</td>
                   <td className="p-4">
                     <div className="space-y-1.5">
                       <StatusBadge status={b.status} />

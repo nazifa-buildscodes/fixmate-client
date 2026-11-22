@@ -49,7 +49,7 @@ export default function AdminTransactionsPage() {
                 <td className="p-4 font-semibold">{p.serviceTitle}</td>
                 <td className="p-4 text-xs">{p.customerName}</td>
                 <td className="p-4 text-xs">{p.technicianName}</td>
-                <td className="p-4 font-bold text-emerald-600">${p.amount}</td>
+                <td className="p-4 font-bold text-emerald-600">৳{p.amount}</td>
                 <td className="p-4 font-mono text-xs">{p.transactionId}</td>
                 <td className="p-4 text-xs text-slate-500">
                   {new Date(p.paidAt).toLocaleString()}
