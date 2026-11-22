@@ -76,4 +76,14 @@ Finding a trustworthy repair technician is difficult—customers often lack visi
    cd fixmate-client
    npm install
    
+   ---
    
+ ##  👩‍💻 Author
+
+# Nazifa Nowsin
+
+Portfolio: https://nazifa-nowsin-portfolio.vercel.app/
+
+LinkedIn: https://www.linkedin.com/in/nazifa-nowsin-7b7459243/
+
+GitHub: https://github.com/nazifa-buildscodes
