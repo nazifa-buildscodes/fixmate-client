@@ -62,8 +62,61 @@ export default function TechnicianRequestsPage() {
     });
   };
 
+  const renderActions = (b) => (
+    <div className="flex flex-wrap gap-2 md:justify-end">
+      {b.status === 'requested' && (
+        <>
+          <button
+            type="button"
+            onClick={() => updateStatus(b._id, 'accepted')}
+            className="btn-primary px-3 py-1.5 text-xs"
+          >
+            Accept
+          </button>
+          <button
+            type="button"
+            onClick={() => setRejectId(b._id)}
+            className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-100"
+          >
+            Reject
+          </button>
+        </>
+      )}
+      {b.status === 'accepted' && (
+        <button
+          type="button"
+          onClick={() => updateStatus(b._id, 'in-progress')}
+          className="btn-primary px-3 py-1.5 text-xs"
+        >
+          Start Work
+        </button>
+      )}
+      {b.status === 'in-progress' && (
+        <button
+          type="button"
+          onClick={() => {
+            setCompleteModal(b);
+            setFinalAmount(String(b.basePrice));
+          }}
+          className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+        >
+          Mark Completed
+        </button>
+      )}
+      {b.status === 'completed' && (
+        <button
+          type="button"
+          onClick={() => openTechInvoice(b)}
+          className="btn-secondary inline-flex items-center gap-1 px-3 py-1.5 text-xs"
+        >
+          <FileText className="h-3.5 w-3.5" /> Invoice
+        </button>
+      )}
+    </div>
+  );
+
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-extrabold">Manage Repair Requests</h1>
         <select
@@ -86,99 +139,89 @@ export default function TechnicianRequestsPage() {
           No repair requests match this filter.
         </div>
       ) : (
-        <div className="card-surface w-full overflow-x-auto">
-          <table className="w-full min-w-[780px] text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
-              <tr>
-                <th className="p-3.5 sm:p-4">Service &amp; Problem</th>
-                <th className="whitespace-nowrap p-3.5 sm:p-4">Customer</th>
-                <th className="whitespace-nowrap p-3.5 sm:p-4">Date</th>
-                <th className="whitespace-nowrap p-3.5 sm:p-4">Status</th>
-                <th className="whitespace-nowrap p-3.5 text-right sm:p-4">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {bookings.map((b) => (
-                <tr key={b._id} className="align-middle">
-                  <td className="p-3.5 pr-4 sm:p-4">
-                    <div className="min-w-[180px] max-w-xs">
-                      <p className="font-bold">{b.serviceTitle}</p>
-                      <p className="mt-1 line-clamp-2 text-xs text-slate-500">
-                        {b.problemDescription}
-                      </p>
-                    </div>
-                  </td>
-                  <td className="p-3.5 pr-4 text-xs sm:p-4">
-                    <div className="min-w-[150px]">
-                      <p className="font-semibold text-slate-900 dark:text-white">
-                        {b.customerName}
-                      </p>
-                      <p className="text-slate-500">{b.customerPhone}</p>
-                      <p className="line-clamp-2 text-slate-400">{b.address}</p>
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap p-3.5 text-xs text-slate-500 sm:p-4">
-                    {new Date(b.preferredDate).toLocaleDateString()}
-                  </td>
-                  <td className="whitespace-nowrap p-3.5 sm:p-4">
-                    <div className="flex flex-col items-start gap-1">
-                      <StatusBadge status={b.status} />
-                      {b.status === 'completed' && <StatusBadge status={b.paymentStatus} />}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap p-3.5 text-right sm:p-4">
-                    <div className="flex flex-wrap justify-end gap-2">
-                      {b.status === 'requested' && (
-                        <>
-                          <button
-                            onClick={() => updateStatus(b._id, 'accepted')}
-                            className="btn-primary px-3 py-1.5 text-xs"
-                          >
-                            Accept
-                          </button>
-                          <button
-                            onClick={() => setRejectId(b._id)}
-                            className="rounded-lg bg-rose-50 px-3 py-1.5 text-xs font-semibold text-rose-600 hover:bg-rose-100"
-                          >
-                            Reject
-                          </button>
-                        </>
-                      )}
-                      {b.status === 'accepted' && (
-                        <button
-                          onClick={() => updateStatus(b._id, 'in-progress')}
-                          className="btn-primary px-3 py-1.5 text-xs"
-                        >
-                          Start Work
-                        </button>
-                      )}
-                      {b.status === 'in-progress' && (
-                        <button
-                          onClick={() => {
-                            setCompleteModal(b);
-                            setFinalAmount(String(b.basePrice));
-                          }}
-                          className="rounded-xl bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
-                        >
-                          Mark Completed
-                        </button>
-                      )}
-                      {b.status === 'completed' && (
-                        <button
-                          type="button"
-                          onClick={() => openTechInvoice(b)}
-                          className="btn-secondary inline-flex items-center gap-1 px-3 py-1.5 text-xs"
-                        >
-                          <FileText className="h-3.5 w-3.5" /> Invoice
-                        </button>
-                      )}
-                    </div>
-                  </td>
+        <>
+          {/* Mobile Card View */}
+          <div className="space-y-3.5 md:hidden">
+            {bookings.map((b) => (
+              <div key={b._id} className="card-surface min-w-0 space-y-3 p-4">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-bold text-slate-900 dark:text-white">
+                      {b.serviceTitle}
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500">{b.problemDescription}</p>
+                  </div>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <StatusBadge status={b.status} />
+                    {b.status === 'completed' && <StatusBadge status={b.paymentStatus} />}
+                  </div>
+                </div>
+
+                <div className="space-y-1 border-y border-slate-100 py-2.5 text-xs dark:border-slate-800">
+                  <p className="font-semibold text-slate-800 dark:text-slate-200">
+                    {b.customerName} · <span className="font-normal">{b.customerPhone}</span>
+                  </p>
+                  <p className="text-slate-500">{b.address}</p>
+                  <p className="text-slate-400">
+                    Date: {new Date(b.preferredDate).toLocaleDateString()}
+                  </p>
+                </div>
+
+                <div className="pt-0.5">{renderActions(b)}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop / Tablet Table View */}
+          <div className="card-surface hidden w-full overflow-x-auto md:block">
+            <table className="w-full min-w-[780px] text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
+                <tr>
+                  <th className="p-3.5 sm:p-4">Service &amp; Problem</th>
+                  <th className="whitespace-nowrap p-3.5 sm:p-4">Customer</th>
+                  <th className="whitespace-nowrap p-3.5 sm:p-4">Date</th>
+                  <th className="whitespace-nowrap p-3.5 sm:p-4">Status</th>
+                  <th className="whitespace-nowrap p-3.5 text-right sm:p-4">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {bookings.map((b) => (
+                  <tr key={b._id} className="align-middle">
+                    <td className="p-3.5 pr-4 sm:p-4">
+                      <div className="min-w-[180px] max-w-xs">
+                        <p className="font-bold">{b.serviceTitle}</p>
+                        <p className="mt-1 line-clamp-2 text-xs text-slate-500">
+                          {b.problemDescription}
+                        </p>
+                      </div>
+                    </td>
+                    <td className="p-3.5 pr-4 text-xs sm:p-4">
+                      <div className="min-w-[150px]">
+                        <p className="font-semibold text-slate-900 dark:text-white">
+                          {b.customerName}
+                        </p>
+                        <p className="text-slate-500">{b.customerPhone}</p>
+                        <p className="line-clamp-2 text-slate-400">{b.address}</p>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap p-3.5 text-xs text-slate-500 sm:p-4">
+                      {new Date(b.preferredDate).toLocaleDateString()}
+                    </td>
+                    <td className="whitespace-nowrap p-3.5 sm:p-4">
+                      <div className="flex flex-col items-start gap-1">
+                        <StatusBadge status={b.status} />
+                        {b.status === 'completed' && <StatusBadge status={b.paymentStatus} />}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap p-3.5 text-right sm:p-4">
+                      {renderActions(b)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
       )}
 
       <ConfirmModal

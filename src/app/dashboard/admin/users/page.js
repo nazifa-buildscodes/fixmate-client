@@ -39,9 +39,55 @@ export default function AdminUsersPage() {
   if (loading) return <div className="p-6 text-sm">Loading users...</div>;
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <h1 className="text-2xl font-extrabold">Manage Users</h1>
-      <div className="card-surface overflow-x-auto">
+
+      {/* Mobile Card View */}
+      <div className="space-y-3 md:hidden">
+        {users.map((u) => {
+          const isSelf = u.email === session?.user?.email;
+          return (
+            <div key={u._id} className="card-surface min-w-0 space-y-3 p-4">
+              <div className="flex items-center gap-3">
+                <img
+                  src={
+                    u.image ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(u.name || 'U')}`
+                  }
+                  alt={u.name}
+                  className="h-10 w-10 shrink-0 rounded-full object-cover"
+                />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-slate-900 dark:text-white">
+                    {u.name}
+                  </p>
+                  <p className="truncate text-xs text-slate-500">{u.email}</p>
+                </div>
+                <span className="shrink-0 text-xs font-bold uppercase text-brand-600">
+                  {u.role}
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between gap-2 border-t border-slate-100 pt-2.5 dark:border-slate-800">
+                <span className="text-xs text-slate-500">Role</span>
+                <select
+                  disabled={isSelf}
+                  value={u.role || 'customer'}
+                  onChange={(e) => handleRoleChange(u._id, e.target.value)}
+                  className="input-field w-36 py-1.5 text-xs disabled:opacity-50"
+                >
+                  <option value="customer">Customer</option>
+                  <option value="technician">Technician</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Desktop / Tablet Table View */}
+      <div className="card-surface hidden overflow-x-auto md:block">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500 dark:border-slate-800 dark:bg-slate-800/50">
             <tr>
@@ -56,7 +102,7 @@ export default function AdminUsersPage() {
               const isSelf = u.email === session?.user?.email;
               return (
                 <tr key={u._id}>
-                  <td className="p-4 flex items-center gap-3">
+                  <td className="flex items-center gap-3 p-4">
                     <img
                       src={
                         u.image ||
@@ -68,7 +114,7 @@ export default function AdminUsersPage() {
                     <span className="font-semibold">{u.name}</span>
                   </td>
                   <td className="p-4 text-slate-500">{u.email}</td>
-                  <td className="p-4 font-bold uppercase text-xs text-brand-600">{u.role}</td>
+                  <td className="p-4 text-xs font-bold uppercase text-brand-600">{u.role}</td>
                   <td className="p-4 text-right">
                     <select
                       disabled={isSelf}
