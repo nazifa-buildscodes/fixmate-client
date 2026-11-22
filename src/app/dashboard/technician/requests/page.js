@@ -168,10 +168,10 @@ export default function TechnicianRequestsPage() {
           >
             <h3 className="text-lg font-bold">Complete Repair Job</h3>
             <p className="text-xs text-slate-500">
-              Set the final invoice amount (USD) for <strong>{completeModal.serviceTitle}</strong>.
+              Set the final invoice amount (BDT) for <strong>{completeModal.serviceTitle}</strong>.
             </p>
             <div>
-              <label className="mb-1 block text-xs font-semibold">Final Amount (USD) *</label>
+              <label className="mb-1 block text-xs font-semibold">Final Amount (BDT) *</label>
               <input
                 type="number"
                 min="1"

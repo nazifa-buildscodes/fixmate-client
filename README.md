@@ -8,9 +8,10 @@ Finding a trustworthy repair technician is difficult—customers often lack visi
 ---
 
 ## 🔗 Live & Repository Links
-- **Live Website:** `https://your-vercel-app.vercel.app`
-- **Backend API:** `https://your-render-server.onrender.com`
-- **Server Repository:** `https://github.com/YOUR_USERNAME/fixmate-server`
+- **Live Website:** https://fixmate-client-delta.vercel.app
+- **Backend API:** https://fixmate-server-wrsy.onrender.com
+- **Client Repository:** https://github.com/nazifa-buildscodes/fixmate-client
+- **Server Repository:** https://github.com/nazifa-buildscodes/fixmate-server
 
 ---
 
@@ -19,10 +20,10 @@ Finding a trustworthy repair technician is difficult—customers often lack visi
 | Role | Email | Password |
 | :--- | :--- | :--- |
 | **Admin** | `admin@fixmate.com` | `Aa1234` |
-| **Technician** | `tech1@fixmate.com` | `YOUR_TECHNICIAN_PASSWORD` |
-| **Customer** | `YOUR_CUSTOMER_EMAIL` | `YOUR_CUSTOMER_PASSWORD` |
+| **Technician** | `hmhasan4@gmail.com` | `Tt1234` |
+| **Customer** | `tahsingpt1yr@gmail.com` | `Cc1234` |
 
-*(Customers can also sign up directly or sign in using **Continue with Google**.)*
+*(Customers can also register a new account or sign in via **Continue with Google**.)*
 
 ---
 
@@ -37,8 +38,8 @@ Finding a trustworthy repair technician is difficult—customers often lack visi
 ### Public Pages & Server-Side Discovery
 - **Home (`/`):** Hero banner, latest 6 approved & available services, "How FixMate Works" 4-step workflow, and clickable category cards.
 - **Browse Services (`/services`):** Server-side search, category/service mode filters, sorting (Price Low–High, High–Low, Newest), pagination, and URL query synchronization.
-- **Service Details (`/services/[id]`):** Complete service breakdown, technician profile, average ratings, and role-restricted Repair Request form (blocks duplicate active requests).
-- **About (`/about`), Custom `404`, Error Boundary, & Loading Skeletons.**
+- **Service Details (`/services/[id]`):** Full service info, technician profile, average ratings, and role-restricted Repair Request form (blocks duplicate active requests).
+- **About (`/about`), Custom `404`, Error Boundary, & Loading Skeletons**.
 
 ### Role-Based Dashboards
 - **Customer Dashboard:** Overview stats & charts, **My Bookings** (Cancel while `requested`, visual **Job Timeline Tracker**, **Stripe Pay Now** after completion, 1–5 star **Rating & Review**), and **Payment History**.
@@ -47,8 +48,8 @@ Finding a trustworthy repair technician is difficult—customers often lack visi
 - **Shared Profile (`/dashboard/profile`):** Update name, phone, area, bio, and profile photo via ImgBB without logging out.
 
 ### Payments & UI/UX
-- **Stripe Pay-After-Service (Test Mode):** Checkout enabled strictly after completion, backed by idempotent verification and Stripe Webhook.
-- **Modern UX:** Dark/Light mode toggle, toast notifications (`sonner`), confirmation modals, responsive mobile/tablet/desktop layout, and BDT (`৳`) localization.
+- **Stripe Pay-After-Service (Test Mode):** Checkout enabled strictly after completion in **BDT (`৳`)**, backed by idempotent verification and a Stripe Webhook.
+- **Modern UX:** Dark/Light mode toggle, toast notifications (`sonner`), confirmation modals, and responsive mobile/tablet/desktop layout.
 
 ---
 
@@ -71,6 +72,8 @@ Finding a trustworthy repair technician is difficult—customers often lack visi
 
 1. Clone the repository and install dependencies:
    ```bash
-   git clone [https://github.com/YOUR_USERNAME/fixmate-client.git](https://github.com/YOUR_USERNAME/fixmate-client.git)
+   git clone [https://github.com/nazifa-buildscodes/fixmate-client.git](https://github.com/nazifa-buildscodes/fixmate-client.git)
    cd fixmate-client
    npm install
+   
+   
