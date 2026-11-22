@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Wrench, User, Briefcase } from 'lucide-react';
+import { Wrench, User, Briefcase, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 import { signUp, useSession } from '@/lib/auth-client';
 import { getDashboardPath } from '@/lib/constants';
@@ -15,6 +15,7 @@ export default function SignUpPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('customer');
   const [pwError, setPwError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -143,17 +144,27 @@ export default function SignUpPage() {
 
           <div>
             <label className="mb-1.5 block text-xs font-semibold">Password</label>
-            <input
-              type="password"
-              required
-              value={password}
-              onChange={(e) => {
-                setPassword(e.target.value);
-                setPwError(validatePassword(e.target.value));
-              }}
-              placeholder="Min 6 chars, 1 uppercase, 1 lowercase"
-              className="input-field"
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                required
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPwError(validatePassword(e.target.value));
+                }}
+                placeholder="Min 6 chars, 1 uppercase, 1 lowercase"
+                className="input-field pr-10"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((prev) => !prev)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
             {pwError && <p className="mt-1 text-xs font-medium text-rose-600">{pwError}</p>}
           </div>
 
