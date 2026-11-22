@@ -56,7 +56,8 @@ export default function TechnicianRequestsPage() {
       address: b.address,
       dateLabel: 'Preferred Date',
       dateValue: new Date(b.preferredDate).toLocaleDateString(),
-      statusText: b.paymentStatus === 'paid' ? 'completed & paid' : b.status,
+      statusText: b.status,
+      paymentStatus: b.paymentStatus || 'unpaid',
       amount: b.finalAmount || b.basePrice,
     });
   };

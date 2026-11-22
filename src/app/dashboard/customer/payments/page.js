@@ -26,7 +26,8 @@ export default function CustomerPaymentsPage() {
       technicianName: p.technicianName,
       dateLabel: 'Paid At',
       dateValue: new Date(p.paidAt).toLocaleString(),
-      statusText: p.paymentStatus || 'paid',
+      statusText: 'completed',
+      paymentStatus: p.paymentStatus || 'paid',
       amount: p.amount,
     });
   };

@@ -15,24 +15,29 @@ export default function InvoiceModal({ invoice, onClose }) {
     technicianName = '',
     dateLabel = 'Date',
     dateValue = '',
-    statusText = 'Paid',
+    statusText = 'completed',
+    paymentStatus = 'unpaid',
     amount = 0,
   } = invoice;
+
+  const isPaid = String(paymentStatus).toLowerCase() === 'paid';
+  const paymentBadgeText = isPaid ? 'PAID' : 'UNPAID';
 
   const handleDownloadTextInvoice = () => {
     const content = [
       '========================================',
       `FIXMATE - ${roleLabel.toUpperCase()}`,
       '========================================',
-      `Reference ID : ${docId}`,
-      `Service      : ${serviceTitle}`,
-      customerName ? `Customer     : ${customerName}` : null,
-      customerPhone ? `Phone        : ${customerPhone}` : null,
-      address ? `Address      : ${address}` : null,
-      technicianName ? `Technician   : ${technicianName}` : null,
-      `${dateLabel} : ${dateValue}`,
-      `Status       : ${statusText}`,
-      `Amount       : BDT ${amount}`,
+      `Reference ID   : ${docId}`,
+      `Service        : ${serviceTitle}`,
+      customerName ? `Customer       : ${customerName}` : null,
+      customerPhone ? `Phone          : ${customerPhone}` : null,
+      address ? `Address        : ${address}` : null,
+      technicianName ? `Technician     : ${technicianName}` : null,
+      `${dateLabel.padEnd(14, ' ')} : ${dateValue}`,
+      `Job Status     : ${String(statusText).toUpperCase()}`,
+      `Payment Status : ${paymentBadgeText}`,
+      `Amount         : BDT ${amount}`,
       '========================================',
     ]
       .filter(Boolean)
@@ -102,9 +107,23 @@ export default function InvoiceModal({ invoice, onClose }) {
             <span className="text-slate-500">{dateLabel}</span>
             <span className="text-right text-xs">{dateValue}</span>
           </div>
-          <div className="flex justify-between gap-4">
+          <div className="flex items-center justify-between gap-4">
             <span className="text-slate-500">Status</span>
-            <span className="font-semibold uppercase text-emerald-600">{statusText}</span>
+            <span className="font-semibold uppercase text-slate-800 dark:text-slate-200">
+              {statusText}
+            </span>
+          </div>
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-slate-500">Payment</span>
+            <span
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-extrabold uppercase ${
+                isPaid
+                  ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/70 dark:text-emerald-300'
+                  : 'bg-amber-100 text-amber-700 dark:bg-amber-950/70 dark:text-amber-300'
+              }`}
+            >
+              {paymentBadgeText}
+            </span>
           </div>
           <div className="flex justify-between gap-4 border-t border-slate-200 pt-2.5 text-base font-extrabold dark:border-slate-800">
             <span>Total Amount</span>
